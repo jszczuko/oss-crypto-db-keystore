@@ -542,7 +542,8 @@ abstract class SQLCachedKeyStoreSpi extends KeyStoreSpi {
 
 	private byte[] doCipher(char[] password, byte[] data, int mode) throws KeyStoreException {
 		try {
-			SecureRandom rand = new SecureRandom(new String(password).getBytes("UTF-8"));
+			SecureRandom rand = SecureRandom.getInstance("SHA1PRNG");
+			rand.setSeed(new String(password).getBytes("UTF-8"));
 			byte[] passRand = new byte[16];
 			byte[] initVector = new byte[16];
 			rand.nextBytes(passRand);

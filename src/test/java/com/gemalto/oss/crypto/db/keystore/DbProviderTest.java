@@ -151,7 +151,8 @@ public class DbProviderTest {
 		byte[] data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".getBytes();
 
 		// encrypt
-		SecureRandom rand = new SecureRandom(new String(password).getBytes("UTF-8"));
+		SecureRandom rand = SecureRandom.getInstance("SHA1PRNG");
+		rand.setSeed(new String(password).getBytes("UTF-8"));
 		byte[] passRand = new byte[16];
 		byte[] initVector = new byte[16];
 		rand.nextBytes(passRand);
@@ -165,7 +166,8 @@ public class DbProviderTest {
 		byte[] cyphertext = cipher.doFinal(data);
 
 		// decrypt
-		rand = new SecureRandom(new String(password).getBytes("UTF-8"));
+		rand = SecureRandom.getInstance("SHA1PRNG");
+		rand.setSeed(new String(password).getBytes("UTF-8"));
 		passRand = new byte[16];
 		initVector = new byte[16];
 		rand.nextBytes(passRand);
@@ -222,12 +224,14 @@ public class DbProviderTest {
 
 		try {
 			int initialSize = ks.size();
+			
+			String password = "some very very strange password";
 
 			ks.setKeyEntry("test01", pub, null, null);
-			ks.setKeyEntry("test02", pub, "some very very strange password".toCharArray(), null);
+			ks.setKeyEntry("test02", pub, password.toCharArray(), null);
 
 			Key key01 = ks.getKey("test01", null);
-			Key key02 = ks.getKey("test02", "some very very strange password".toCharArray());
+			Key key02 = ks.getKey("test02", password.toCharArray());
 
 			assertNotNull(key01);
 			assertNotNull(key02);
