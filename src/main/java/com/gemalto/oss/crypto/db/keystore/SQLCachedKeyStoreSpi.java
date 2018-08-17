@@ -12,7 +12,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.KeyStoreSpi;
 import java.security.NoSuchAlgorithmException;
@@ -22,6 +24,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,8 +41,9 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
-import javax.crypto.Mac;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
@@ -82,6 +86,11 @@ abstract class SQLCachedKeyStoreSpi extends KeyStoreSpi {
 	 * Standard (AES).
 	 */
 	private static final String KEY_TYPE = "AES";
+	
+	private int iterations = 1000;
+
+	public static final int HASH_BYTES = 192;
+
 
 	/**
 	 * {@inheritDoc}
@@ -483,7 +492,7 @@ abstract class SQLCachedKeyStoreSpi extends KeyStoreSpi {
 		if (keypass == null)
 			return;
 		try {
-			String encodedPass = saltedHmacSha256(new String(keypass).getBytes("UTF-8"), this.saltBase64);
+			String encodedPass = pbkdf2(keypass, this.saltBase64, iterations,HASH_BYTES);
 			KeyStoreEntry keyStoreEntry = storage.get(alias);
 			if (keyStoreEntry != null) {
 				keyStoreEntry.setKeyPassword(encodedPass);
@@ -505,16 +514,47 @@ abstract class SQLCachedKeyStoreSpi extends KeyStoreSpi {
 			LOGGER.trace("[KSSQL] Comparing key password with result:" + false);
 			return false;
 		}
-		boolean result = (storedKeyPass.equals(saltedHmacSha256(new String(password).getBytes("UTF-8"), saltBase64)));
+		boolean result = constantTimeEquals(storedKeyPass,(pbkdf2(new String(password).toCharArray(), saltBase64, iterations, HASH_BYTES)));
 		LOGGER.trace("[KSSQL] Comparing key password with result:" + result);
 		return result;
 	}
+	
+	/**
+	 * Computes the PBKDF2 hash of a password.
+	 *
+	 * @param password    the password to hash.
+	 * @param salt        the salt
+	 * @param iterations  the iteration count (slowness factor)
+	 * @param bytesLength the length of the hash to compute in bytes
+	 * @return the PBDKF2 hash of the password in Base64
+	 */
+	private static String pbkdf2(char[] password, String salt, int iterations, int bytesLength)
+			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		byte[] saltBytes = Base64.getDecoder().decode(salt);
+		PBEKeySpec spec = new PBEKeySpec(password, saltBytes, iterations, bytesLength * 8);
+		SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 
-	private static String saltedHmacSha256(byte[] key, String salt) throws Exception {
-		Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-		SecretKeySpec secret_key = new SecretKeySpec(key, "HmacSHA256");
-		sha256_HMAC.init(secret_key);
-		return Base64.getEncoder().encodeToString(sha256_HMAC.doFinal(Base64.getDecoder().decode(salt)));
+		return Base64.getEncoder().encodeToString(skf.generateSecret(spec).getEncoded());
+	}
+
+	/**
+	 * Compares two byte arrays in length-constant time. This comparison method
+	 * is used so that password hashes cannot be extracted from an on-line
+	 * system using a timing attack and then attacked off-line.
+	 *
+	 * @param a1 the first byte array
+	 * @param b2 the second byte array
+	 * @return true if both byte arrays are the same, false if not
+	 */
+	private static boolean constantTimeEquals(String a1, String b2) {
+		byte[] a = a1.getBytes(StandardCharsets.UTF_8);
+		byte[] b = b2.getBytes(StandardCharsets.UTF_8);
+
+		int diff = a.length ^ b.length;
+		for (int i = 0; i < a.length && i < b.length; i++) {
+			diff |= a[i] ^ b[i];
+		}
+		return diff == 0;
 	}
 
 	private String generateSaltBase64() {
