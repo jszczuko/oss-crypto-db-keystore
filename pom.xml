@@ -113,4 +113,13 @@
 		</dependency>
 
 	</dependencies>
+
+	<distributionManagement>
+		<repository>
+		  <id>github</id>
+		  <name>GitHub jszczuko Apache Maven Packages</name>
+		  <url>https://maven.pkg.github.com/jszczuko/oss-crypto-db-keystore</url>
+		</repository>
+	 </distributionManagement>
+	 
 </project>
