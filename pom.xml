@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gemalto.oss.crypto</groupId>
 	<artifactId>db-keystore</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1</version>
 	<name>DataBase KeyStore</name>
 	<description>DataBase support for KeyStore implementation</description>
 
@@ -47,7 +47,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<junit.version>4.11</junit.version>
 		<build.plugin.version>3.7.0</build.plugin.version>
-		<log4j.version>1.2.17</log4j.version>
+		<log4j.version>2.14.1</log4j.version>
 		<simple-jndi.version>0.11.4.1</simple-jndi.version>
 		<slf4j-simple.version>1.7.25</slf4j-simple.version>
 		<bcprov-jdk15on.version>1.60</bcprov-jdk15on.version>
@@ -69,19 +69,21 @@
 	</build>
 
 	<dependencies>
-
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
 			<version>${slf4j-simple.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>${log4j.version}</version>
+		  </dependency>
+		  <dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
+		  </dependency>
 		<dependency>
 			<groupId>simple-jndi</groupId>
 			<artifactId>simple-jndi</artifactId>

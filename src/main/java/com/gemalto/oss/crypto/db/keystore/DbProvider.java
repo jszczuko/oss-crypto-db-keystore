@@ -72,7 +72,7 @@ public class DbProvider extends Provider {
 	 * mechanism.
 	 */
 	public DbProvider() {
-		super(PROVIDER_NAME, version, info);
+		super(PROVIDER_NAME, Double.toString(version), info);
 		this.services.add(new DbKeyStoreService(this, DB_KS, ALGO, DbKeyStoreService.class.getName(), null, null));
 		this.services.add(new DbKeyStoreService(this, DS_KS, ALGO, DbKeyStoreService.class.getName(), null, null));
 	}
