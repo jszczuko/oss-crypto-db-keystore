@@ -18,7 +18,7 @@ The provider can also be configured as part of your environment via static regis
 ```java
 security.provider.<n>=com.gemalto.oss.crypto.db.keystore.DbProvider
 ```
-Where <n> is the preference you want the provider at (1 being the most preferred).
+Where < n > is the preference you want the provider at (1 being the most preferred).
 
 # DataBase schema
 
@@ -65,3 +65,16 @@ ks.load(input, "database_password".toCharArray());
 # Encryption schema
 
 Private keys will be stored in encrypted form using AES/CBC/PKCS5PADDING cipher.
+
+
+# Package dependencie
+```xml
+<dependencies>
+  <dependency>
+    <groupId>com.gemalto.oss.crypto</groupId>
+    <artifactId>db-keystore</artifactId>
+    <version>0.2.2</version>
+  </dependency>
+</dependencies>
+
+```
